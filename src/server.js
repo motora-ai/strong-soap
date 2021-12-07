@@ -36,28 +36,42 @@ class Server extends Base {
       path += '/';
     wsdl.load(function(err) {
       if (err) throw err;
-      self.xmlHandler = new XMLHandler(self.wsdl.definitions.schemas, self.wsdl.options);
-      var listeners = server.listeners('request').slice();
 
-      server.removeAllListeners('request');
-      server.addListener('request', function(req, res) {
-        if (typeof self.authorizeConnection === 'function') {
-          if (!self.authorizeConnection(req.connection.remoteAddress)) {
-            res.end();
-            return;
+      if(util.isExpress(server)) {
+        server.route(path).all(function (req, res) {
+          if (typeof self.authorizeConnection === 'function') {
+              if (!self.authorizeConnection(req, res)) {
+                  res.end();
+                  return;
+              }
           }
-        }
-        var reqPath = url.parse(req.url).pathname;
-        if (reqPath[reqPath.length - 1] !== '/')
-          reqPath += '/';
-        if (path === reqPath) {
           self._requestListener(req, res);
-        } else {
-          for (var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i].call(this, req, res);
+        });
+        options.callback(err, self);
+      } else {
+        self.xmlHandler = new XMLHandler(self.wsdl.definitions.schemas, self.wsdl.options);
+        var listeners = server.listeners('request').slice();
+  
+        server.removeAllListeners('request');
+        server.addListener('request', function(req, res) {
+          if (typeof self.authorizeConnection === 'function') {
+            if (!self.authorizeConnection(req.connection.remoteAddress)) {
+              res.end();
+              return;
+            }
           }
-        }
-      });
+          var reqPath = url.parse(req.url).pathname;
+          if (reqPath[reqPath.length - 1] !== '/')
+            reqPath += '/';
+          if (path === reqPath) {
+            self._requestListener(req, res);
+          } else {
+            for (var i = 0, len = listeners.length; i < len; i++) {
+              listeners[i].call(this, req, res);
+            }
+          }
+        });
+      }
     });
   }
 

@@ -55,14 +55,14 @@ function createClient(url, options, callback, endpoint) {
   });
 }
 
-function listen(server, pathOrOptions, services, xml) {
+function listen(server, pathOrOptions, services, xml, callback) {
   debug('listen params: pathOrOptions: %j services: %j xml: %j', pathOrOptions, services, xml);
   var options = {},
     path = pathOrOptions,
     uri = null;
 
   if (typeof pathOrOptions === 'object') {
-    options = pathOrOptions;
+    options = {...pathOrOptions, callback};
     path = options.path;
     services = options.services;
     xml = options.xml;

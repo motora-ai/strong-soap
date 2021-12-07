@@ -56,6 +56,10 @@ exports.extend = function extend(base, obj) {
   return base;
 };
 
+exports.isExpress = function(server) {
+  return (typeof server.route === 'function' && typeof server.use === 'function');
+}
+
 exports.toXMLDate = function(d) {
   function pad(n) {
     return n < 10 ? '0' + n : n;
